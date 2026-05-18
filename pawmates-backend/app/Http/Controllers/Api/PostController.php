@@ -194,4 +194,33 @@ class PostController extends Controller
         $post->update(['status' => 'removed']);
         return response()->json($post);
     }
+    // Recherche avancée
+public function search(Request $request)
+{
+    $query = Post::with('user')->where('status', 'available');
+    
+    if ($request->q) {
+        $query->where(function($q) use ($request) {
+            $q->where('title', 'like', '%' . $request->q . '%')
+              ->orWhere('description', 'like', '%' . $request->q . '%')
+              ->orWhere('category', 'like', '%' . $request->q . '%');
+        });
+    }
+    
+    if ($request->type === 'adoption') {
+        $query->where('is_adoption', true);
+    } elseif ($request->type === 'donation') {
+        $query->where('is_donation', true);
+    }
+    
+    if ($request->city) {
+        $query->where('city', $request->city);
+    }
+    
+    if ($request->category) {
+        $query->where('category', $request->category);
+    }
+    
+    return response()->json($query->latest()->get());
+}
 }

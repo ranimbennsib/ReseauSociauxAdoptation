@@ -161,15 +161,36 @@
             <div class="rule"></div>
 
             <!-- Category + City -->
-            <div class="field half">
-              <label>Catégorie <span class="req">*</span></label>
-              <input
-                v-model="form.category"
-                placeholder="Chat, Chien, Lapin…"
-                required
-                :disabled="loading"
-              />
-            </div>
+           <!-- Category + City -->
+<div class="field half">
+  <label>Catégorie <span class="req">*</span></label>
+  <div class="autocomplete-wrapper">
+    <input
+      v-model="form.category"
+      type="text"
+      placeholder="Chat, Chien, Lapin…"
+      required
+      :disabled="loading"
+      @input="updateCategorySuggestions"
+      @blur="setTimeout(() => categorySuggestions = [], 200)"
+      @focus="updateCategorySuggestions"
+    />
+    <div v-if="categorySuggestions.length > 0" class="autocomplete-dropdown">
+      <div 
+        v-for="cat in categorySuggestions" 
+        :key="cat"
+        class="autocomplete-item"
+        @mousedown.prevent="form.category = cat; categorySuggestions = []"
+      >
+        {{ cat }}
+      </div>
+      <div class="autocomplete-item custom" @mousedown.prevent="categorySuggestions = []">
+        Ajouter "{{ form.category }}" comme nouvelle catégorie
+      </div>
+    </div>
+  </div>
+  <span class="field-hint">Vous pouvez écrire votre propre catégorie</span>
+</div>
             <div class="field half">
               <label>Ville <span class="req">*</span></label>
               <select v-model="form.city" required :disabled="loading">
@@ -352,7 +373,27 @@ const cities = [
   'El_Kef', 'Mahdia', 'Sidi_Bouzid', 'Siliana', 'Zaghouan',
   'Tozeur', 'Manouba', 'Kebili',
 ]
+/****** pour le categorie autcompilation******** */
+// Catégories prédéfinies pour l'autocomplétion
+const commonCategories = [
+  'Chat', 'Chien', 'Lapin', 'Oiseau', 'Hamster', 'Cochon d\'Inde',
+  'Poisson', 'Tortue', 'Furet', 'Rat', 'Souris', 'Cheval',
+  'Âne', 'Chèvre', 'Mouton', 'Poule', 'Canard', 'Autre'
+]
 
+// Filtrer les suggestions de catégories
+const categorySuggestions = ref([])
+
+const updateCategorySuggestions = () => {
+  const input = form.category.toLowerCase()
+  if (input.length === 0) {
+    categorySuggestions.value = []
+    return
+  }
+  categorySuggestions.value = commonCategories.filter(cat => 
+    cat.toLowerCase().includes(input)
+  ).slice(0, 5) // Limiter à 5 suggestions
+}
 const form = reactive({
   title: '',
   description: '',
@@ -460,7 +501,43 @@ const handleSubmit = async () => {
   flex-direction: column;
   font-family: 'DM Sans', sans-serif;
 }
-
+/* Autocomplétion */
+.autocomplete-wrapper {
+  position: relative;
+  width: 100%;
+}
+.autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #e8e3d8;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.autocomplete-item {
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.15s;
+}
+.autocomplete-item:hover {
+  background: #f5f0e8;
+}
+.autocomplete-item.custom {
+  border-top: 1px solid #ede9e0;
+  color: #c8a84b;
+  font-style: italic;
+}
+.field-hint {
+  font-size: 0.7rem;
+  color: #aaa;
+  margin-top: 4px;
+}
 .create-wrapper {
   display: grid;
   grid-template-columns: 480px 1fr;

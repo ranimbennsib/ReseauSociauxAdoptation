@@ -22,6 +22,7 @@ Route::get('/posts/adoption',            [PostController::class, 'adoption']);
 Route::get('/posts/donation',            [PostController::class, 'donation']);
 Route::get('/posts/category/{category}', [PostController::class, 'byCategory']);
 Route::get('/posts/city/{city}',         [PostController::class, 'byCity']);
+Route::get('/posts/search',              [PostController::class, 'search']);
 
 // ─── Comments (Public) ────────────────────────────────────────────
 Route::get('/comments/post/{postId}',       [CommentController::class, 'byPost']);
