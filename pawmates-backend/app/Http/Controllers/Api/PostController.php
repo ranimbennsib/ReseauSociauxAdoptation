@@ -111,25 +111,66 @@ class PostController extends Controller
         return response()->json($post->load('user'), 201);
     }
 
-    // Modifier un post
+    // Modifier un post (propriétaire uniquement)
     public function update(Request $request, $id)
     {
         $post = Post::findOrFail($id);
 
+        // ✅ Vérification : seul le propriétaire peut modifier
         if ($post->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Non autorisé !'], 403);
+            return response()->json([
+                'message' => 'Non autorisé ! Vous n\'êtes pas le propriétaire de ce post.'
+            ], 403);
+        }
+
+        // ✅ Vérification : on ne peut pas modifier un post fermé ou supprimé
+        if (in_array($post->status, ['closed', 'removed', 'adopted'])) {
+            return response()->json([
+                'message' => 'Ce post ne peut plus être modifié (statut : ' . $post->status . ').'
+            ], 422);
+        }
+
+        // ✅ Validation des champs (tous optionnels en modification)
+        $request->validate([
+            'title'               => 'sometimes|string|max:255',
+            'description'         => 'sometimes|string',
+            'image'               => 'sometimes|string',
+            'category'            => 'sometimes|string',
+            'city'                => 'sometimes|string',
+            'localisation_detail' => 'sometimes|nullable|string',
+            'is_adoption'         => 'sometimes|boolean',
+            'is_donation'         => 'sometimes|boolean',
+            'card_number'         => 'sometimes|nullable|string',
+            'card_holder_name'    => 'sometimes|nullable|string',
+        ]);
+
+        // ✅ Vérification métier : au moins adoption ou donation
+        $isAdoption = $request->has('is_adoption') ? $request->is_adoption : $post->is_adoption;
+        $isDonation = $request->has('is_donation') ? $request->is_donation : $post->is_donation;
+
+        if (!$isAdoption && !$isDonation) {
+            return response()->json([
+                'message' => 'Le post doit rester au moins une adoption ou une donation !'
+            ], 422);
+        }
+
+        // ✅ Si donation activée, card_number obligatoire
+        if ($isDonation && !$request->card_number && !$post->card_number) {
+            return response()->json([
+                'message' => 'Le numéro de carte est obligatoire pour une donation !'
+            ], 422);
         }
 
         $post->update($request->only([
             'title', 'description', 'image', 'category',
             'city', 'localisation_detail', 'is_adoption',
-            'is_donation', 'card_number', 'card_holder_name'
+            'is_donation', 'card_number', 'card_holder_name',
         ]));
 
-        return response()->json($post);
+        return response()->json($post->load('user'));
     }
 
-    // Fermer un post
+    // Fermer un post (propriétaire uniquement)
     public function close(Request $request, $id)
     {
         $post = Post::findOrFail($id);

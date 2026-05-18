@@ -35,6 +35,13 @@ const router = createRouter({
       component: () => import('../views/CreatePostView.vue'),
       meta: { requiresAuth: true },
     },
+    // ajouter pour la modification
+      {
+    path: '/posts/:id/edit',
+    name: 'post-edit',
+    component: () => import('../views/EditPostView.vue'),
+    meta: { requiresAuth: true },
+  },
     // ✅ La route dynamique en dernier parmi les routes /posts/*
     {
       path: '/posts/:id',

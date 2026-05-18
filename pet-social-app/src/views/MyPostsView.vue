@@ -19,6 +19,7 @@
             <span class="post-city">{{ post.city?.replace('_', ' ') }} · {{ post.category }}</span>
           </div>
           <div class="post-row-actions">
+
             <button
               v-if="post.status === 'available'"
               class="btn-outline"
@@ -26,6 +27,14 @@
             >
               Voir
             </button>
+            <button
+                v-if="post.status === 'available'"
+                class="btn-edit"
+                @click="router.push(`/posts/${post.id}/edit`)"
+              >
+                Modifier
+            </button>
+
             <button
               v-if="post.status === 'available'"
               class="btn-ghost"
@@ -187,5 +196,18 @@ const closePost = async (id) => {
   text-align: center;
   padding: 3rem;
   color: #aaa;
+}
+.btn-edit {
+  padding: 0.4rem 0.9rem;
+  background: transparent;
+  border: 1px solid #c8a84b;
+  color: #c8a84b;
+  border-radius: 5px;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.btn-edit:hover {
+  background: #c8a84b;
+  color: #fff;
 }
 </style>
